@@ -1319,25 +1319,15 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   const raf = window.requestAnimationFrame.bind(window);
-  /* === ИНТЕГРАЦИЯ С GOOGLE APPS SCRIPT ===
-     Ссылка на ваше развёрнутое веб-приложение GAS (оно пишет заявки в Google-таблицу).
-     Требования к деплою: «Развернуть» → «Веб-приложение» →
-         Исполнить как: «Я»  •  Доступ: «Все, даже анонимные».
-     Если доступ закрыт — GAS вернёт страницу логина, строка в таблицу не попадёт,
-     хотя посетитель всё равно увидит «спасибо» (при no-cors статус ответа не читается).
-     Чтобы переиспользовать страницу в другом проекте — подставьте свой URL
-     (https://script.google.com/macros/s/…/exec) или '' — тогда форма уйдёт
-     в демо-режим (см. .catch в обработчике submit). */
-  // const GAS_URL = '';
+
   const nf = new Intl.NumberFormat('ru-RU');
 
-  /* ---------- 1. Шапка, прогресс чтения, кнопка «наверх» ---------- */
+  /* ---------- Шапка, прогресс чтения, кнопка «наверх» ---------- */
   const header = $('#header');
   const progress = $('#progress');
   const totop = $('#totop');
 
-  /* Если браузер умеет scroll-timeline, полосу прогресса рисует композитор —
-     из JS её вообще не трогаем (в Chrome это 0 работы на кадр). */
+  /* Если браузер умеет scroll-timeline, полосу прогресса рисует композитор */
   const nativeProgress = window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()');
 
   /* scrollHeight читаем только при измерении, а не в каждом кадре прокрутки:
@@ -1380,7 +1370,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
     window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
   });
 
-  /* ---------- 2. Появление блоков при прокрутке ---------- */
+  /* ---------- Появление блоков при прокрутке ---------- */
   const revealables = $$('.reveal');
   const showAll = () => revealables.forEach((el) => el.classList.add('in'));
 
@@ -1417,9 +1407,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
     showAll();
   }
 
-  /* ---------- 3. Бесконечные анимации гасим вне экрана ----------
-     Лента логотипов едет вечно; когда она не видна, останавливаем её —
-     композитор не тратит кадры на то, чего пользователь не видит. */
+  /* ---------- Бесконечные анимации гасим вне экрана ---------- */
   const marquees = $$('.marquee');
   if (marquees.length && 'IntersectionObserver' in window && !reduced) {
     const mio = new IntersectionObserver((entries) => {
@@ -1430,7 +1418,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
     marquees.forEach((el) => mio.observe(el));
   }
 
-  /* ---------- 3. Анимированные счётчики ---------- */
+  /* ---------- Анимированные счётчики ---------- */
   const counters = $$('[data-count]');
   function runCounter(el) {
     const target = parseFloat(el.dataset.count);
@@ -1465,14 +1453,13 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
   } else {
     counters.forEach(runCounter);
   }
-  /* ---------- 4. Свечение и наклон карточек за курсором ---------- */
+  /* ---------- Свечение и наклон карточек за курсором ---------- */
   const tiltCards = $$('.bento .card');
   if (finePointer && !reduced) {
     tiltCards.forEach((card) => {
       let q = false, px = 0, py = 0;
       /* В обработчике события нет ни одного чтения layout: только записи координат.
-         getBoundingClientRect() вызывается один раз на кадр внутри rAF — иначе браузер
-         пересчитывал бы раскладку на каждое движение мыши (layout thrashing). */
+         getBoundingClientRect() вызывается один раз на кадр внутри rAF. */
       card.addEventListener('pointermove', (e) => {
         px = e.clientX; py = e.clientY;
         if (q) return;
@@ -1494,7 +1481,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
     });
   }
 
-  /* ---------- 5. Курсорное свечение ---------- */
+  /* ---------- Курсорное свечение ---------- */
   const glow = $('#cursorGlow');
   if (glow && finePointer && !reduced) {
     let tx = window.innerWidth / 2, ty = window.innerHeight / 2, cx = tx, cy = ty;
@@ -1522,7 +1509,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
     }, { passive: true });
   }
 
-  /* ---------- 6. Табы живого демо ---------- */
+  /* ---------- Табы живого демо ---------- */
   const tabs = $$('.tab');
   const panels = $$('.panel');
   function selectTab(tab) {
@@ -1553,7 +1540,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
     });
   });
 
-  /* ---------- 7. Переключатель месяц / год ---------- */
+  /* ---------- Переключатель месяц / год ---------- */
   const billing = $('#billingSwitch');
   if (billing) {
     billing.addEventListener('click', () => {
@@ -1573,7 +1560,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
       if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); billing.click(); }
     });
   }
-  /* ---------- 8. FAQ-аккордеон ---------- */
+  /* ---------- FAQ-аккордеон ---------- */
   const accs = $$('.acc');
   function setAcc(acc, open) {
     const body = $('.acc__body', acc);
@@ -1605,7 +1592,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
     }, 160);
   });
 
-  /* ---------- 9. Мобильное меню ---------- */
+  /* ---------- Мобильное меню ---------- */
   const burger = $('#burger');
   const mobileNav = $('#mobileNav');
   function setMenu(open) {
@@ -1624,7 +1611,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
     }
   });
 
-  /* ---------- 10. Предзаполнение формы выбранным тарифом ---------- */
+  /* ---------- Предзаполнение формы выбранным тарифом ---------- */
   const taskField = $('#f-task');
   const form = $('#leadForm');
   $$('a[data-plan]').forEach((link) => {
@@ -1637,7 +1624,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
       }
     });
   });
-/* ---------- 11. Валидация и отправка заявки ---------- */
+/* ---------- Валидация и отправка заявки ---------- */
   const formHint = $('#formHint');
   const consentBox = $('#f-consent');
   const consentErr = $('#e-consent');
@@ -1689,11 +1676,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
     digits = digits.slice(0, 11);
     const rest = digits.slice(1);
     let out = '+7';
-    /* БАГ (исправлен): разделитель добавлялся и тогда, когда после него ещё нет цифры.
-       Из-за этого в конце появлялся «висячий» хвост — ') ', '-' или второй '-', — и
-       Backspace на нём не работал: удалённый разделитель тут же дописывался заново,
-       значение не менялось. Теперь каждый разделитель рисуется только если за ним
-       есть хотя бы одна цифра, поэтому Backspace всегда убирает цифру. */
+    
     if (rest.length) out += ' (' + rest.slice(0, 3);
     if (rest.length >= 4) out += ') ' + rest.slice(3, 6);   // ') ' — только с цифрой
     if (rest.length >= 7) out += '-' + rest.slice(6, 8);    // был >= 6
@@ -1703,11 +1686,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
 
   const phoneInput = $('#f-phone');
   if (phoneInput) {
-    /* Простая маска: переформатируем значение целиком на каждый ввод.
-       Курсор после переформатирования оказывается в конце строки — это ожидаемое
-       поведение для маски, которую заполняют слева направо. Восстанавливать позицию
-       каретки по «количеству цифр слева» НЕЛЬЗЯ: formatPhone сам добавляет цифру
-       кода страны («7»), поэтому счётчик сдвигается и каретка прыгает назад. */
+    /* Простая маска */
     phoneInput.addEventListener('input', () => {
       phoneInput.value = formatPhone(phoneInput.value);
     });
@@ -1727,8 +1706,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
       consentErr.classList.toggle('show', !consentBox.checked);
     });
   }
-  /* Конфетти и экран успеха. Отправка идёт в Google Apps Script (см. ниже),
-     поэтому этот блок отвечает только за визуальную часть «спасибо». */
+  /* экран успеха */
   function burstConfetti() {
     const box = $('#confetti');
     if (!box || reduced) return;
@@ -1773,15 +1751,12 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
       if (!consentOk && !firstInvalid) firstInvalid = consentBox;
       if (firstInvalid) { firstInvalid.focus(); return; }
 
-      /* Honeypot: бот заполнил скрытое поле — молча показываем «успех», ничего не сохраняя */
+      /* Honeypot */
       if (honeypot.value.trim()) { showSuccess(); return; }
 
-      /* === ОТПРАВКА заявки на Google Apps Script ===
-         (раньше здесь был setTimeout — имитация. Теперь настоящий fetch.) */
-      submitBtn.classList.add('is-loading');  // спиннер рядом с надписью кнопки (CSS .btn.is-loading)
+      submitBtn.classList.add('is-loading');  
 
-      // Собираем поля формы в JSON. Имена `name` совпадают с заголовками
-      // столбца в Google-таблице (см. GAS doPost). `consent` уже проверено выше.
+
       const payload = {
         name:      form.name.value.trim(),
         email:     form.email.value.trim(),
@@ -1792,7 +1767,7 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
                 source_name: 'kva_ai'
       };
 
-      // Отправляем данные на наш собственный серверный роут Vercel
+      // серверный роут Vercel
       fetch('/api/get-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1808,14 +1783,6 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
         console.error("Ошибка при отправке данных:", err);
       });
 
-
-      // fetch(GAS_URL, {
-      //   method: 'POST',
-      //   mode: 'no-cors',                                          // без preflight и без чтения ответа
-      //   headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // CORS-safelisted тип
-      //   body: JSON.stringify(payload)                              // JSON-строка; GAS читает e.postData.contents
-      // })                      // запрос ушёл → экран «спасибо»
-      //   .catch(() => {});
 
       setTimeout(() => {
       showSuccess();
