@@ -1792,29 +1792,30 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
                 source_name: 'kva_ai'
       };
 
-      /* --- Отправка POST на Google Apps Script ---
-         ВАЖНО про CORS и preflight:
-         Google Apps Script НЕ умеет отвечать на предварительный запрос OPTIONS
-         (у ContentService нет API для заголовков ответа), поэтому если отправить
-         Content-Type: application/json — браузер сначала шлёт preflight OPTIONS,
-         не получает Access-Control-Allow-Origin и блокирует запрос с ошибкой:
-           "Response to preflight request doesn't pass access control check".
-         Решение — сделать запрос «простым» (simple request), тогда preflight не
-         отправляется вообще:
-           • mode: 'no-cors'                          — не требуем читать ответ;
-           • Content-Type: 'text/plain;charset=utf-8' — входит в CORS-safelisted
-             список, поэтому preflight не нужен. В GAS тело всё равно доступно
-             через e.postData.contents, парсинг JSON в doPost работает как есть.
-         Ответ будет «opaque» (его нельзя прочитать), поэтому факт успеха
-         определяем по отсутствию сетевой ошибки — для лид-формы этого
-         достаточно: строка в таблице появляется, посетитель видит «спасибо». */
-      fetch(GAS_URL, {
+      // Отправляем данные на наш собственный серверный роут Vercel
+      fetch('/api/get-data', {
         method: 'POST',
-        mode: 'no-cors',                                          // без preflight и без чтения ответа
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // CORS-safelisted тип
-        body: JSON.stringify(payload)                              // JSON-строка; GAS читает e.postData.contents
-      })                      // запрос ушёл → экран «спасибо»
-        .catch(() => {});
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload) 
+      })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Ошибка сервера: ${response.status}`);
+        }
+        return response.json();
+      })
+      .catch((err) => {
+        console.error("Ошибка при отправке данных:", err);
+      });
+
+
+      // fetch(GAS_URL, {
+      //   method: 'POST',
+      //   mode: 'no-cors',                                          // без preflight и без чтения ответа
+      //   headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // CORS-safelisted тип
+      //   body: JSON.stringify(payload)                              // JSON-строка; GAS читает e.postData.contents
+      // })                      // запрос ушёл → экран «спасибо»
+      //   .catch(() => {});
 
       setTimeout(() => {
       showSuccess();
