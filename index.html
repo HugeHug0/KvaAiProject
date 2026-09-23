@@ -1779,6 +1779,9 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
         }
         return response.json();
       })
+      .then((data) => {
+        console.log('Успешно записано:', data);
+      })
       .catch((err) => {
         console.error("Ошибка при отправке данных:", err);
       });
