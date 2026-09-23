@@ -1,18 +1,22 @@
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
-    return response.status(405).json({ error: 'Method Not Allowed' });
+    return response.status(405).json({
+      error: 'Method Not Allowed'
+    });
   }
 
   try {
-    const GAS_URL = process.env.GAS_URL;
+    const targetUrl = process.env.GAS_URL;
 
-    if (!GAS_URL) {
-      throw new Error('GAS_URL не задан');
+    if (!targetUrl) {
+      return response.status(500).json({
+        error: 'Не настроен URL сервиса'
+      });
     }
 
     const payload = request.body;
 
-    const gasResponse = await fetch(GAS_URL, {
+    const externalResponse = await fetch(targetUrl, {
       method: 'POST',
       redirect: 'follow',
       headers: {
@@ -21,11 +25,30 @@ export default async function handler(request, response) {
       body: JSON.stringify(payload)
     });
 
-    if (!gasResponse.ok) {
-      throw new Error(`GAS вернул статус ${gasResponse.status}`);
+    const responseText = await externalResponse.text();
+
+    let data;
+
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = {
+        message: responseText
+      };
     }
 
-    return response.status(200).json({ success: true });
+    if (!externalResponse.ok) {
+      return response.status(502).json({
+        error: 'Ошибка внешнего сервиса',
+        status: externalResponse.status,
+        data
+      });
+    }
+
+    return response.status(200).json({
+      success: true,
+      data
+    });
 
   } catch (error) {
     return response.status(500).json({
