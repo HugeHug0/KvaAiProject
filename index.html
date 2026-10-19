@@ -1314,6 +1314,8 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
 (() => {
   'use strict';
 
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbx9RCpjlVIduzbuUur6wRknT5YfL1YXswuS_i1iOwPXTIrEuapPG1bTZu8gfEAipDeDyQ/exec'
+
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1767,24 +1769,51 @@ h3{font-size:clamp(1.12rem,2vw,1.35rem);line-height:1.22}
                 source_name: 'kva_ai'
       };
 
-      // серверный роут Vercel
-      fetch('/api/get-data', {
+      fetch(GAS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        redirect: 'follow', // Автоматически следует за редиректами Google
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
         body: JSON.stringify(payload) 
       })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Ошибка сервера: ${response.status}`);
+      .then(async (externalResponse) => {
+      
+        const responseText = await externalResponse.text();
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          data = { message: responseText };
         }
-        return response.json();
+
+        // Если статус ответа от Google не в диапазоне 200-299
+        if (!externalResponse.ok) {
+          throw {
+            isServerError: true,
+            error: 'Ошибка внешнего сервиса',
+            status: externalResponse.status,
+            data
+          };
+        }
+
+        
+        return {
+          success: true,
+          data
+        };
       })
-      .then((data) => {
-        console.log('Успешно записано:', data.success);
-        console.log('Ответ сервера:', data.data);
+      .then((result) => {
+        console.log('Успешно записано:', result.success);
+        console.log('Ответ сервера:', result.data);
       })
       .catch((err) => {
-        console.error("Ошибка при отправке данных:", err);
+        if (err.isServerError) {
+          console.error(`Ошибка при отправке данных (${err.status}):`, err.error, err.data);
+        } else {
+          console.error("Критическая ошибка при отправке данных:", err.message || err);
+        }
       });
 
 
